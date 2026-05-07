@@ -351,7 +351,7 @@ def format_order(row):
         f"👤 NAMA AM: {row.get('NAMA AM','-')}\n"
         f"👤 PIC: {row.get('NAMA PIC','-')}\n"
         f"📞 NO HP PIC: {row.get('NO HP PIC','-')}\n"
-        f"📅 TGL PS: {row.get('TGL PS','-')}\n"
+        f"📅 TGL PS: {row.get('KET','-')}\n"
         f"🏢 STO: {row.get('STO','-')}\n"
         f"🏢 NAMA PERUSAHAAN: {row.get('NAMA PERUSAHAAN','-')}\n"
         f"🏢 ALAMAT INSTALASI PELANGGAN: {row.get('ALAMAT INSTALASI PELANGGAN','-')}\n"
