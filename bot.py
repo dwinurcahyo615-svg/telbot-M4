@@ -347,7 +347,7 @@ def format_order(row):
         f"📌 NOMOR ORDER: {row.get('NOMOR ORDER','-')}\n"
         f"📝 NOMOR INTERNET: {row.get('NOMOR INTERNET','-')}\n"
         f"📊 STATUS: {row.get('STATUS','-')}\n"
-        f"🏬 TIPE: {row.get('TIPE','-')}\n"
+        f"🏬 TIPE: {row.get('TIPE ORDER DATIN','-')}\n"
         f"👤 NAMA AM: {row.get('NAMA AM','-')}\n"
         f"👤 PIC: {row.get('NAMA PIC','-')}\n"
         f"📞 NO HP PIC: {row.get('NO HP PIC','-')}\n"
