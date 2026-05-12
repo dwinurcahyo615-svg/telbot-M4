@@ -321,18 +321,18 @@ def load_sheet(spreadsheet_id, gid):
 
     # bersihkan nama kolom
     df.columns = df.columns.astype(str).str.strip().str.upper()
-
-    # ======================================
-    # FIX DUPLICATE KET (khusus ORDER)
-    # ======================================
-
-    ket_indexes = [i for i, col in enumerate(df.columns) if col == "KET"]
-
-    if len(ket_indexes) >= 2:
-        df.columns.values[ket_indexes[0]] = "KET"
-        df.columns.values[ket_indexes[1]] = "TGL PS"
-
-    # ======================================
+    df.columns = (
+    df.columns
+    .astype(str)
+    .str.strip()
+    .str.upper()
+    )
+    
+    # rename duplicate otomatis dari pandas
+    df.columns = [
+        "TGL PS" if col == "KET.1" else col
+        for col in df.columns
+    ]
 
     # bersihkan isi
     for col in df.columns:
