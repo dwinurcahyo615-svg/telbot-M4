@@ -93,91 +93,6 @@ async def visit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Masukkan tanggal (contoh: 080626)\nKetik next untuk hari ini"
     )
-
-
-    # =====================
-    # VISIT PLAN
-    # =====================
-    if uid in visit_sessions:
-    
-        s = visit_sessions[uid]
-    
-        if s["step"] == "tanggal":
-    
-            if text.lower() == "next":
-                s["tanggal"] = datetime.datetime.now().strftime("%d%m%y")
-            else:
-                s["tanggal"] = text
-    
-            s["step"] = "nik"
-    
-            await update.message.reply_text(
-                "Masukkan NIK:"
-            )
-            return
-    
-        elif s["step"] == "nik":
-    
-            s["nik"] = text
-            s["step"] = "am"
-    
-            await update.message.reply_text(
-                "Masukkan Nama AM:"
-            )
-            return
-    
-        elif s["step"] == "am":
-    
-            s["am"] = text
-            s["step"] = "pelanggan"
-    
-            await update.message.reply_text(
-                "Masukkan Nama Pelanggan:"
-            )
-            return
-    
-        elif s["step"] == "pelanggan":
-    
-            s["pelanggan"] = text
-            s["step"] = "area"
-    
-            await update.message.reply_text(
-                "Masukkan Area:"
-            )
-            return
-    
-        elif s["step"] == "area":
-    
-            s["area"] = text
-            s["step"] = "keperluan"
-    
-            await update.message.reply_text(
-                "Masukkan Keperluan:"
-            )
-            return
-    
-        elif s["step"] == "keperluan":
-    
-            s["keperluan"] = text
-    
-            sheet = get_visit_sheet()
-    
-            sheet.append_row([
-                s["tanggal"],
-                s["nik"],
-                s["am"],
-                s["pelanggan"],
-                s["area"],
-                s["keperluan"]
-            ])
-    
-            await update.message.reply_text(
-                "✅ Visit Plan berhasil disimpan"
-            )
-    
-            del visit_sessions[uid]
-    
-            return
     
 async def cekvst(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
@@ -687,6 +602,81 @@ async def handle_all(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = update.effective_user.id
     text = update.message.text.strip()
     text_lower = text.lower()
+
+# =====================
+# VISIT PLAN
+# =====================
+if uid in visit_sessions:
+
+    s = visit_sessions[uid]
+
+    if s["step"] == "tanggal":
+
+        if text.lower() == "next":
+            s["tanggal"] = datetime.datetime.now().strftime("%d%m%y")
+        else:
+            s["tanggal"] = text
+
+        s["step"] = "nik"
+
+        await update.message.reply_text("Masukkan NIK:")
+        return
+
+    elif s["step"] == "nik":
+
+        s["nik"] = text
+        s["step"] = "am"
+
+        await update.message.reply_text("Masukkan Nama AM:")
+        return
+
+    elif s["step"] == "am":
+
+        s["am"] = text
+        s["step"] = "pelanggan"
+
+        await update.message.reply_text("Masukkan Nama Pelanggan:")
+        return
+
+    elif s["step"] == "pelanggan":
+
+        s["pelanggan"] = text
+        s["step"] = "area"
+
+        await update.message.reply_text("Masukkan Area:")
+        return
+
+    elif s["step"] == "area":
+
+        s["area"] = text
+        s["step"] = "keperluan"
+
+        await update.message.reply_text("Masukkan Keperluan:")
+        return
+
+    elif s["step"] == "keperluan":
+
+        s["keperluan"] = text
+
+        sheet = get_visit_sheet()
+
+        sheet.append_row([
+            s["tanggal"],
+            s["nik"],
+            s["am"],
+            s["pelanggan"],
+            s["area"],
+            s["keperluan"]
+        ])
+
+        await update.message.reply_text(
+            "✅ Visit Plan berhasil disimpan"
+        )
+
+        del visit_sessions[uid]
+
+        return
+
 
 # mapping
     if uid not in sessions and text_lower == "next":
