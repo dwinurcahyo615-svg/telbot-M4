@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 import datetime
+import gspread
 from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
@@ -17,7 +18,7 @@ from docx.oxml.ns import qn
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from difflib import get_close_matches
 from openai import OpenAI
-
+from google.oauth2.service_account import Credentials
 
 
 
@@ -51,7 +52,190 @@ GID_MAPPING = "1670929091"
 SPREADSHEET_DTP_ID = "14Ekqu4eN5j33Y575VeWjMaZWcL_THssvIoic6cIm6Os"
 GID_DTP = "2026604688"
 
+SPREADSHEET_VISIT_ID = "1oCTjbnsacXeS9GY3Yen9poZFTsYOFzwKaoRikb9lMMg"
+SHEET_VISIT_NAME = "vst"
+
 sessions = {}
+visit_sessions = {}
+
+# ============================================================
+# ======================= PLAN VISIT =========================
+# ============================================================
+def get_visit_sheet():
+
+    scopes = [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive"
+    ]
+
+    creds = Credentials.from_service_account_file(
+        "credentials.json",
+        scopes=scopes
+    )
+
+    client = gspread.authorize(creds)
+
+    spreadsheet = client.open_by_key(
+        SPREADSHEET_VISIT_ID
+    )
+
+    return spreadsheet.worksheet(SHEET_VISIT_NAME)
+
+
+async def visit(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    uid = update.effective_user.id
+
+    visit_sessions[uid] = {
+        "step": "tanggal"
+    }
+
+    await update.message.reply_text(
+        "Masukkan tanggal (contoh: 080626)\nKetik next untuk hari ini"
+    )
+
+
+# =====================
+# VISIT PLAN
+# =====================
+
+if uid in visit_sessions:
+
+    s = visit_sessions[uid]
+
+    if s["step"] == "tanggal":
+
+        if text.lower() == "next":
+            s["tanggal"] = datetime.datetime.now().strftime("%d%m%y")
+        else:
+            s["tanggal"] = text
+
+        s["step"] = "nik"
+
+        await update.message.reply_text(
+            "Masukkan NIK:"
+        )
+        return
+
+    elif s["step"] == "nik":
+
+        s["nik"] = text
+        s["step"] = "am"
+
+        await update.message.reply_text(
+            "Masukkan Nama AM:"
+        )
+        return
+
+    elif s["step"] == "am":
+
+        s["am"] = text
+        s["step"] = "pelanggan"
+
+        await update.message.reply_text(
+            "Masukkan Nama Pelanggan:"
+        )
+        return
+
+    elif s["step"] == "pelanggan":
+
+        s["pelanggan"] = text
+        s["step"] = "area"
+
+        await update.message.reply_text(
+            "Masukkan Area:"
+        )
+        return
+
+    elif s["step"] == "area":
+
+        s["area"] = text
+        s["step"] = "keperluan"
+
+        await update.message.reply_text(
+            "Masukkan Keperluan:"
+        )
+        return
+
+    elif s["step"] == "keperluan":
+
+        s["keperluan"] = text
+
+        sheet = get_visit_sheet()
+
+        sheet.append_row([
+            s["tanggal"],
+            s["nik"],
+            s["am"],
+            s["pelanggan"],
+            s["area"],
+            s["keperluan"]
+        ])
+
+        await update.message.reply_text(
+            "✅ Visit Plan berhasil disimpan"
+        )
+
+        del visit_sessions[uid]
+
+        return
+
+
+async def cekvst(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    if not context.args:
+
+        await update.message.reply_text(
+            "Gunakan:\n/cekvst NAMA AM"
+        )
+        return
+
+    nama_am = " ".join(context.args).upper()
+
+    sheet = get_visit_sheet()
+
+    data = sheet.get_all_values()
+
+    if len(data) <= 1:
+        await update.message.reply_text(
+            "Data Visit Plan kosong."
+        )
+        return
+
+    hasil = []
+
+    for row in data[1:]:
+
+        if len(row) < 6:
+            continue
+
+        tanggal = row[0]
+        nik = row[1]
+        am = row[2]
+        pelanggan = row[3]
+        area = row[4]
+        keperluan = row[5]
+
+        if nama_am in am.upper():
+
+            hasil.append(
+                f"{tanggal} / {am} / {pelanggan} / {area} / {keperluan}"
+            )
+
+    if not hasil:
+
+        await update.message.reply_text(
+            "Data tidak ditemukan."
+        )
+        return
+
+    await update.message.reply_text(
+        "\n".join(hasil)
+    )
+
+"/visit → Input Visit Plan\n"
+"/cekvst → Cek Visit Plan\n"
+
 
 # ============================================================
 # =================== DATABASE PELANGGAN =====================
@@ -956,6 +1140,8 @@ def main():
     app.add_handler(CommandHandler("ceknm", ceknm))
     app.add_handler(CommandHandler("mapping", mapping_menu))
     app.add_handler(CommandHandler("cekdtp", cekdtp))
+    app.add_handler(CommandHandler("visit", visit))
+    app.add_handler(CommandHandler("cekvst", cekvst))
 
     
 
