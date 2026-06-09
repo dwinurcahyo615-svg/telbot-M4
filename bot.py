@@ -179,8 +179,7 @@ async def visit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
             return
     
-    
-    async def cekvst(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def cekvst(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
         if not context.args:
     
@@ -231,6 +230,7 @@ async def visit(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             "\n".join(hasil)
         )
+    
 
 "/visit → Input Visit Plan\n"
 "/cekvst → Cek Visit Plan\n"
