@@ -95,143 +95,142 @@ async def visit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
-# =====================
-# VISIT PLAN
-# =====================
-
-if uid in visit_sessions:
-
-    s = visit_sessions[uid]
-
-    if s["step"] == "tanggal":
-
-        if text.lower() == "next":
-            s["tanggal"] = datetime.datetime.now().strftime("%d%m%y")
-        else:
-            s["tanggal"] = text
-
-        s["step"] = "nik"
-
-        await update.message.reply_text(
-            "Masukkan NIK:"
-        )
-        return
-
-    elif s["step"] == "nik":
-
-        s["nik"] = text
-        s["step"] = "am"
-
-        await update.message.reply_text(
-            "Masukkan Nama AM:"
-        )
-        return
-
-    elif s["step"] == "am":
-
-        s["am"] = text
-        s["step"] = "pelanggan"
-
-        await update.message.reply_text(
-            "Masukkan Nama Pelanggan:"
-        )
-        return
-
-    elif s["step"] == "pelanggan":
-
-        s["pelanggan"] = text
-        s["step"] = "area"
-
-        await update.message.reply_text(
-            "Masukkan Area:"
-        )
-        return
-
-    elif s["step"] == "area":
-
-        s["area"] = text
-        s["step"] = "keperluan"
-
-        await update.message.reply_text(
-            "Masukkan Keperluan:"
-        )
-        return
-
-    elif s["step"] == "keperluan":
-
-        s["keperluan"] = text
-
-        sheet = get_visit_sheet()
-
-        sheet.append_row([
-            s["tanggal"],
-            s["nik"],
-            s["am"],
-            s["pelanggan"],
-            s["area"],
-            s["keperluan"]
-        ])
-
-        await update.message.reply_text(
-            "✅ Visit Plan berhasil disimpan"
-        )
-
-        del visit_sessions[uid]
-
-        return
-
-
-async def cekvst(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
-    if not context.args:
-
-        await update.message.reply_text(
-            "Gunakan:\n/cekvst NAMA AM"
-        )
-        return
-
-    nama_am = " ".join(context.args).upper()
-
-    sheet = get_visit_sheet()
-
-    data = sheet.get_all_values()
-
-    if len(data) <= 1:
-        await update.message.reply_text(
-            "Data Visit Plan kosong."
-        )
-        return
-
-    hasil = []
-
-    for row in data[1:]:
-
-        if len(row) < 6:
-            continue
-
-        tanggal = row[0]
-        nik = row[1]
-        am = row[2]
-        pelanggan = row[3]
-        area = row[4]
-        keperluan = row[5]
-
-        if nama_am in am.upper():
-
-            hasil.append(
-                f"{tanggal} / {am} / {pelanggan} / {area} / {keperluan}"
+    # =====================
+    # VISIT PLAN
+    # =====================
+    if uid in visit_sessions:
+    
+        s = visit_sessions[uid]
+    
+        if s["step"] == "tanggal":
+    
+            if text.lower() == "next":
+                s["tanggal"] = datetime.datetime.now().strftime("%d%m%y")
+            else:
+                s["tanggal"] = text
+    
+            s["step"] = "nik"
+    
+            await update.message.reply_text(
+                "Masukkan NIK:"
             )
-
-    if not hasil:
-
+            return
+    
+        elif s["step"] == "nik":
+    
+            s["nik"] = text
+            s["step"] = "am"
+    
+            await update.message.reply_text(
+                "Masukkan Nama AM:"
+            )
+            return
+    
+        elif s["step"] == "am":
+    
+            s["am"] = text
+            s["step"] = "pelanggan"
+    
+            await update.message.reply_text(
+                "Masukkan Nama Pelanggan:"
+            )
+            return
+    
+        elif s["step"] == "pelanggan":
+    
+            s["pelanggan"] = text
+            s["step"] = "area"
+    
+            await update.message.reply_text(
+                "Masukkan Area:"
+            )
+            return
+    
+        elif s["step"] == "area":
+    
+            s["area"] = text
+            s["step"] = "keperluan"
+    
+            await update.message.reply_text(
+                "Masukkan Keperluan:"
+            )
+            return
+    
+        elif s["step"] == "keperluan":
+    
+            s["keperluan"] = text
+    
+            sheet = get_visit_sheet()
+    
+            sheet.append_row([
+                s["tanggal"],
+                s["nik"],
+                s["am"],
+                s["pelanggan"],
+                s["area"],
+                s["keperluan"]
+            ])
+    
+            await update.message.reply_text(
+                "✅ Visit Plan berhasil disimpan"
+            )
+    
+            del visit_sessions[uid]
+    
+            return
+    
+    
+    async def cekvst(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    
+        if not context.args:
+    
+            await update.message.reply_text(
+                "Gunakan:\n/cekvst NAMA AM"
+            )
+            return
+    
+        nama_am = " ".join(context.args).upper()
+    
+        sheet = get_visit_sheet()
+    
+        data = sheet.get_all_values()
+    
+        if len(data) <= 1:
+            await update.message.reply_text(
+                "Data Visit Plan kosong."
+            )
+            return
+    
+        hasil = []
+    
+        for row in data[1:]:
+    
+            if len(row) < 6:
+                continue
+    
+            tanggal = row[0]
+            nik = row[1]
+            am = row[2]
+            pelanggan = row[3]
+            area = row[4]
+            keperluan = row[5]
+    
+            if nama_am in am.upper():
+    
+                hasil.append(
+                    f"{tanggal} / {am} / {pelanggan} / {area} / {keperluan}"
+                )
+    
+        if not hasil:
+    
+            await update.message.reply_text(
+                "Data tidak ditemukan."
+            )
+            return
+    
         await update.message.reply_text(
-            "Data tidak ditemukan."
+            "\n".join(hasil)
         )
-        return
-
-    await update.message.reply_text(
-        "\n".join(hasil)
-    )
 
 "/visit → Input Visit Plan\n"
 "/cekvst → Cek Visit Plan\n"
