@@ -4,3 +4,4 @@ python-docx
 openpyxl
 requests
 openai
+gspread google-auth
