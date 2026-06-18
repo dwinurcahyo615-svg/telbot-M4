@@ -1093,21 +1093,33 @@ def main():
     app.add_handler(CommandHandler("cekvst", cekvst))
 
     visit_handler = ConversationHandler(
-    entry_points=[
-        CommandHandler("visit", visit_start)
-    ],
-    states={
-        VISIT_INPUT: [
-            MessageHandler(
-                filters.TEXT & ~filters.COMMAND,
-                visit_save
-            )
-        ]
-    },
-    fallbacks=[]
-)
+        entry_points=[
+            CommandHandler("visit", visit_start)
+        ],
+        states={
+            VISIT_INPUT: [
+                MessageHandler(
+                    filters.TEXT & ~filters.COMMAND,
+                    visit_save
+                )
+            ]
+        },
+        fallbacks=[]
+    )
 
-app.add_handler(visit_handler)
+    app.add_handler(visit_handler)
+
+    app.add_handler(
+        CommandHandler("cekvst", cekvst)
+    )
+
+    app.add_handler(
+        MessageHandler(
+            filters.TEXT & ~filters.COMMAND,
+            handle_all
+        )
+    )
+
 
     print("BOT ALL IN ONE BERJALAN...")
     app.run_polling()
