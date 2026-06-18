@@ -1,7 +1,6 @@
 import pandas as pd
 import os
 import datetime
-import sqlite3
 from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
@@ -53,138 +52,7 @@ GID_DTP = "2026604688"
 
 sessions = {}
 
-# ============================================================
-# =================== SQ Lite =====================
-# ============================================================
-DB_NAME = "visitplan.db"
 
-def init_db():
-    conn = sqlite3.connect(DB_NAME)
-    cur = conn.cursor()
-
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS visit_plan (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        tanggal TEXT,
-        nik TEXT,
-        nama_am TEXT,
-        pelanggan TEXT,
-        area TEXT,
-        keperluan TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-    """)
-
-    conn.commit()
-    conn.close()
-
-init_db()
-
-from telegram.ext import ConversationHandler
-
-VISIT_INPUT = 100
-
-async def visit_start(update, context):
-    await update.message.reply_text(
-        "Masukkan data:\n\n"
-        "NIK\n"
-        "Nama AM\n"
-        "Nama Pelanggan\n"
-        "Area\n"
-        "Keperluan"
-    )
-    return VISIT_INPUT
-
-from datetime import datetime
-import sqlite3
-
-DB_NAME = "visitplan.db"
-
-async def visit_save(update, context):
-    text = update.message.text.strip()
-
-    data = text.split("\n")
-
-    if len(data) != 5:
-        await update.message.reply_text(
-            "Format salah.\n\n"
-            "NIK\nNama AM\nNama Pelanggan\nArea\nKeperluan"
-        )
-        return VISIT_INPUT
-
-    nik = data[0].strip()
-    nama_am = data[1].strip()
-    pelanggan = data[2].strip()
-    area = data[3].strip()
-    keperluan = data[4].strip()
-
-    tanggal = datetime.now().strftime("%d%m%y")
-
-    conn = sqlite3.connect(DB_NAME)
-    cur = conn.cursor()
-
-    cur.execute("""
-    INSERT INTO visit_plan
-    (tanggal, nik, nama_am, pelanggan, area, keperluan)
-    VALUES (?, ?, ?, ?, ?, ?)
-    """, (
-        tanggal,
-        nik,
-        nama_am,
-        pelanggan,
-        area,
-        keperluan
-    ))
-
-    conn.commit()
-    conn.close()
-
-    await update.message.reply_text(
-        "✅ Visit Plan berhasil disimpan"
-    )
-
-    return ConversationHandler.END
-
-async def cekvst(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
-    if not context.args:
-        await update.message.reply_text(
-            "Contoh:\n/cekvst Rachmat"
-        )
-        return
-
-    nama_am = " ".join(context.args)
-
-    conn = sqlite3.connect(DB_NAME)
-    cur = conn.cursor()
-
-    cur.execute("""
-        SELECT tanggal,nama_am,pelanggan,area,keperluan
-        FROM visit_plan
-        WHERE LOWER(nama_am)=LOWER(?)
-        ORDER BY id
-    """, (nama_am,))
-
-    rows = cur.fetchall()
-
-    conn.close()
-
-    if not rows:
-        await update.message.reply_text(
-            f"Data visit {nama_am} tidak ditemukan."
-        )
-        return
-
-    hasil = []
-
-    for row in rows:
-        hasil.append(
-            f"{row[0]} / {row[1]} / {row[2]} / {row[3]} / {row[4]}"
-        )
-
-    await update.message.reply_text(
-        "\n".join(hasil)
-    )
 # ============================================================
 # =================== DATABASE PELANGGAN =====================
 # ============================================================
@@ -1090,35 +958,6 @@ def main():
     app.add_handler(CommandHandler("ceknm", ceknm))
     app.add_handler(CommandHandler("mapping", mapping_menu))
     app.add_handler(CommandHandler("cekdtp", cekdtp))
-    app.add_handler(CommandHandler("cekvst", cekvst))
-
-    visit_handler = ConversationHandler(
-        entry_points=[
-            CommandHandler("visit", visit_start)
-        ],
-        states={
-            VISIT_INPUT: [
-                MessageHandler(
-                    filters.TEXT & ~filters.COMMAND,
-                    visit_save
-                )
-            ]
-        },
-        fallbacks=[]
-    )
-
-    app.add_handler(visit_handler)
-
-    app.add_handler(
-        CommandHandler("cekvst", cekvst)
-    )
-
-    app.add_handler(
-        MessageHandler(
-            filters.TEXT & ~filters.COMMAND,
-            handle_all
-        )
-    )
 
 
     print("BOT ALL IN ONE BERJALAN...")
